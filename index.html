@@ -201,6 +201,38 @@ button:hover{
   margin-top:12px;
 }
 
+.code-card{
+  margin-top:8px;
+  background:#121212;
+  border:1px solid #262626;
+  overflow:hidden;
+  border-radius:10px;
+}
+
+.code-card.highlight-line{
+  border-color:#4fc3f7;
+}
+
+.code-card.highlight-line .code-line{
+  background:#10202a;
+}
+
+.line-analysis{
+  padding:10px 14px 12px 50px;
+  background:#161616;
+  border-top:1px solid rgba(255,255,255,0.05);
+  color:#ddd;
+  font-size:0.95rem;
+}
+
+.line-analysis-item + .line-analysis-item{
+  margin-top:6px;
+}
+
+.line-analysis-empty{
+  color:#666;
+}
+
 .code-line{
   display:flex;
   gap:12px;
@@ -294,6 +326,7 @@ button:hover{
   textarea{min-height:260px;}
   .code-line{gap:8px;}
   .code-line-number{flex:0 0 24px;}
+  .line-analysis{padding:10px 12px 12px 42px;}
 }
 </style>
 </head>
@@ -336,14 +369,9 @@ int main(void){
     </section>
 
     <section class="section">
-      <h2>コードの見取り図</h2>
+      <h2>コードと説明</h2>
       <div id="codePreview" class="code-preview"></div>
       <div id="variableState" class="variable-area"></div>
-    </section>
-
-    <section class="section">
-      <h2>このコードの動き</h2>
-      <div id="analysisResult" class="result-block"></div>
     </section>
 
     <section class="section">
@@ -384,8 +412,7 @@ function resetCode(){
   document.getElementById('codeInput').value = '';
   document.getElementById('codePreview').innerHTML = '';
   document.getElementById('variableState').innerHTML = '';
-  document.getElementById('analysisResult').innerHTML = '';
-  document.getElementById('flowchartResult').textContent = '';
+    document.getElementById('flowchartResult').textContent = '';
   document.getElementById('hintResult').innerHTML = '';
 }
 
@@ -394,8 +421,11 @@ function loadSample(type){
   analyzeCode();
 }
 
-function addAnalysis(list, lineNo, text){
-  list.push(`<div class="analysis-line"><strong>${lineNo}行目：</strong>${text}</div>`);
+function addAnalysis(map, lineNo, text){
+  if(!map[lineNo]){
+    map[lineNo] = [];
+  }
+  map[lineNo].push(text);
 }
 
 function addHint(list, lineNo, title, text){
@@ -429,7 +459,7 @@ function extractLoopVar(initText){
 function analyzeCode(){
   const code = document.getElementById('codeInput').value.replace(/\r\n/g, '\n');
   const lines = code.split('\n');
-  const analysis = [];
+  const analysis = {};
   const flowchart = [];
   const hints = [];
   const highlightLines = new Set();
@@ -694,10 +724,18 @@ function analyzeCode(){
     const lineNo = index + 1;
     const highlighted = highlightLines.has(lineNo) ? ' highlight-line' : '';
     const safeText = escapeHtml(line) || '&nbsp;';
+    const lineAnalysis = analysis[lineNo] || [];
+    const analysisHtml = lineAnalysis.length
+      ? `<div class="line-analysis">${lineAnalysis.map(text => `<div class="line-analysis-item">${text}</div>`).join('')}</div>`
+      : `<div class="line-analysis line-analysis-empty">この行の説明はまだありません。</div>`;
+
     return `
-      <div class="code-line${highlighted}">
-        <div class="code-line-number">${lineNo}</div>
-        <div class="code-line-text">${safeText}</div>
+      <div class="code-card${highlighted}">
+        <div class="code-line">
+          <div class="code-line-number">${lineNo}</div>
+          <div class="code-line-text">${safeText}</div>
+        </div>
+        ${analysisHtml}
       </div>
     `;
   }).join('');
@@ -708,10 +746,7 @@ function analyzeCode(){
 
   document.getElementById('codePreview').innerHTML = previewHtml;
   document.getElementById('variableState').innerHTML = variableHtml;
-  document.getElementById('analysisResult').innerHTML = analysis.length
-    ? analysis.join('')
-    : `<div class="note">解析結果はまだありません。コードを入力して「解析する」を押してください。</div>`;
-  document.getElementById('flowchartResult').textContent = flowchart.length
+    document.getElementById('flowchartResult').textContent = flowchart.length
     ? flowchart.join('\n')
     : '疑似フローチャートはまだありません。';
   document.getElementById('hintResult').innerHTML = hints.length
