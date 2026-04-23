@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C言語コード読解支援ツール</title>
+<style>
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:sans-serif;
+  background:#111;
+  color:#eee;
+  line-height:1.7;
+  padding:24px 16px 48px;
+}
+
+.container{
+  width:min(100%, 960px);
+  margin:0 auto;
+}
+
+.page-header{
+  text-align:center;
+  margin-bottom:28px;
+}
+
+.page-title{
+  margin:0;
+  font-size:clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing:0.08em;
+  font-weight:700;
+}
+
+.page-subtitle{
+  margin-top:8px;
+  color:#bbb;
+  font-size:0.95rem;
+}
+
+.tool-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:20px;
+}
+
+.section{
+  margin:0;
+  padding:20px;
+  background:#181818;
+  border:1px solid #2d2d2d;
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.28);
+}
+
+h2{
+  margin:0 0 14px;
+  padding-bottom:8px;
+  border-bottom:1px solid #333;
+  font-size:1.15rem;
+}
+
+.control-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+input,button,textarea{
+  padding:10px 12px;
+  margin:0;
+  font-size:1rem;
+}
+
+input,textarea{
+  background:#101010;
+  color:#eee;
+  border:1px solid #3a3a3a;
+  border-radius:10px;
+  outline:none;
+}
+
+input:focus,textarea:focus{
+  border-color:#4fc3f7;
+  box-shadow:0 0 0 3px rgba(79,195,247,0.15);
+}
+
+textarea{
+  width:100%;
+  min-height:300px;
+  resize:vertical;
+  line-height:1.65;
+  font-family:Consolas, Monaco, "Courier New", monospace;
+  white-space:pre;
+}
+
+button{
+  cursor:pointer;
+  border:none;
+  border-radius:10px;
+  background:#2b2b2b;
+  color:#eee;
+  transition:transform 0.2s ease, background 0.2s ease;
+}
+
+button:hover{
+  background:#353535;
+  transform:translateY(-1px);
+}
+
+.reset-btn{
+  padding:8px 6px;
+  margin-left:2px;
+  font-size:0.95rem;
+  background:transparent;
+  border:none;
+  border-radius:0;
+}
+
+.reset-btn i{
+  color:#bbb;
+}
+
+.reset-btn:hover{
+  background:transparent;
+  transform:none;
+}
+
+.reset-btn:hover i{
+  color:#eee;
+  transform:rotate(180deg);
+  transition:transform 0.25s ease, color 0.25s ease;
+}
+
+.result-block{
+  margin-top:12px;
+}
+
+.analysis-line,
+.warning-line,
+.code-line,
+.variable-chip,
+.legend-box,
+.flowchart-box{
+  border-radius:10px;
+}
+
+.analysis-line{
+  margin-top:10px;
+  padding:12px 14px;
+  background:#141414;
+  border:1px solid #2f2f2f;
+}
+
+.analysis-line strong{
+  color:#4fc3f7;
+}
+
+.warning-line{
+  margin-top:10px;
+  padding:12px 14px;
+  background:#1a1a1a;
+  border-left:3px solid #ff6b6b;
+}
+
+.warning-line strong{
+  color:#ff8a8a;
+}
+
+.hint{
+  margin-top:12px;
+  padding:12px 14px;
+  background:#1a1a1a;
+  border-left:3px solid #4fc3f7;
+  border-radius:10px;
+}
+
+.note{
+  margin-top:10px;
+  font-size:0.9rem;
+  color:#bbb;
+}
+
+.error{
+  color:#ff6b6b;
+  margin-top:10px;
+}
+
+.dim{
+  color:#777;
+}
+
+.highlight{
+  color:#4fc3f7;
+  font-weight:bold;
+}
+
+.code-preview{
+  margin-top:12px;
+}
+
+.code-line{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:8px 10px;
+  background:#121212;
+  border:1px solid #262626;
+  margin-top:6px;
+}
+
+.code-line-number{
+  flex:0 0 28px;
+  color:#777;
+  text-align:right;
+  user-select:none;
+}
+
+.code-line-text{
+  flex:1;
+  white-space:pre-wrap;
+  word-break:break-word;
+  font-family:Consolas, Monaco, "Courier New", monospace;
+}
+
+.code-line.highlight-line{
+  border-color:#4fc3f7;
+  background:#10202a;
+}
+
+.variable-area{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+
+.variable-chip{
+  display:inline-block;
+  padding:6px 10px;
+  background:#101820;
+  border:1px solid #244457;
+  color:#c7ecff;
+  font-size:0.95rem;
+}
+
+.flowchart-box{
+  margin-top:12px;
+  padding:14px;
+  background:#101010;
+  border:1px solid #333;
+  font-family:Consolas, Monaco, "Courier New", monospace;
+  white-space:pre-wrap;
+  line-height:1.8;
+  overflow-x:auto;
+}
+
+.footer-note{
+  text-align:center;
+  margin-top:28px;
+  color:#777;
+  font-size:0.85rem;
+}
+
+.sample-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.sample-btn{
+  font-size:0.92rem;
+  padding:8px 12px;
+}
+
+.legend-box{
+  margin-top:12px;
+  padding:10px 12px;
+  background:#151515;
+  border:1px solid #2f2f2f;
+  color:#bbb;
+  font-size:0.92rem;
+}
+
+@media (max-width: 768px){
+  body{padding:18px 12px 36px;}
+  .tool-grid{gap:16px;}
+  .section{padding:16px;border-radius:14px;}
+  .control-row{align-items:stretch;}
+  .control-row button:not(.reset-btn){flex:1 1 auto;}
+  textarea{min-height:260px;}
+  .code-line{gap:8px;}
+  .code-line-number{flex:0 0 24px;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="page-header">
+    <h1 class="page-title">C CODE READER</h1>
+    <div class="page-subtitle">コードの動きとミスの気づきを支援する学習ツール</div>
+  </header>
+
+  <div class="tool-grid">
+    <section class="section">
+      <h2>コード入力</h2>
+      <textarea id="codeInput" placeholder="ここにC言語コードを入力してください">#include <stdio.h>
+
+int main(void){
+    for(int i=1;i<=3;i++){
+        for(int j=1;j<=3;j++){
+            printf("%d - %d\n",i,j);
+        }
+    }
+
+    return 0;
+}</textarea>
+      <div class="control-row" style="margin-top:12px;">
+        <button onclick="analyzeCode()">解析する</button>
+        <button class="reset-btn" onclick="resetCode()" title="リセット" aria-label="入力と結果をリセット"><i class="fa fa-refresh"></i></button>
+      </div>
+      <div class="sample-row">
+        <button class="sample-btn" onclick="loadSample('basic')">サンプル：基本</button>
+        <button class="sample-btn" onclick="loadSample('if')">サンプル：if文</button>
+        <button class="sample-btn" onclick="loadSample('for')">サンプル：for文</button>
+        <button class="sample-btn" onclick="loadSample('nested')">サンプル：多重ループ</button>
+        <button class="sample-btn" onclick="loadSample('triangle')">サンプル：逆三角形</button>
+        <button class="sample-btn" onclick="loadSample('mistake')">サンプル：ミスあり</button>
+      </div>
+      <div class="legend-box">
+        まずは <span class="highlight">情報技術検定2級レベル</span> を想定した基本的なコード読解支援に絞っています。複雑な構文は未対応のため、説明には推定を含む場合があります。
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>コードの見取り図</h2>
+      <div id="codePreview" class="code-preview"></div>
+      <div id="variableState" class="variable-area"></div>
+    </section>
+
+    <section class="section">
+      <h2>このコードの動き</h2>
+      <div id="analysisResult" class="result-block"></div>
+    </section>
+
+    <section class="section">
+      <h2>疑似フローチャート</h2>
+      <div id="flowchartResult" class="flowchart-box"></div>
+    </section>
+
+    <section class="section">
+      <h2>ミス・ヒント</h2>
+      <div id="hintResult" class="result-block"></div>
+    </section>
+  </div>
+
+  <div class="footer-note">Copyright © M.M. All Rights Reserved.</div>
+</div>
+
+<script>
+const samples = {
+  basic: `#include <stdio.h>\n\nint main(void){\n    int a = 3;\n    int b = 5;\n    int c = a + b;\n    printf("%d\\n", c);\n    return 0;\n}`,
+  if: `#include <stdio.h>\n\nint main(void){\n    int score = 78;\n\n    if(score >= 60){\n        printf("合格です\\n");\n    }\n    else{\n        printf("再挑戦です\\n");\n    }\n\n    return 0;\n}`,
+  for: `#include <stdio.h>\n\nint main(void){\n    int i;\n    int sum = 0;\n\n    for(i = 1; i <= 5; i++){
+        sum = sum + i;\n    }\n\n    printf("%d\\n", sum);\n    return 0;\n}`,
+  nested: `#include <stdio.h>\n\nint main(void){\n    for(int i=1;i<=3;i++){\n        for(int j=1;j<=3;j++){\n            printf("%d - %d\\n",i,j);\n        }\n    }\n\n    return 0;\n}`,
+  triangle: `#include <stdio.h>\n\nint main(void)\n{\n    int x, y;\n\n    for (y=1; y<=5; y++) {\n        for (x=1; x<=5; x++) {\n            if (x<=5-y) {\n                printf(" ");\n            } else {\n                printf("*");\n            }\n        }\n        printf("\\n");\n    }\n    return 0;\n}`,
+  mistake: `#include <stdio.h>\n\nint main(void){\n    int x = 10\n    int y = 20;\n    scanf("%d", y);\n    if(x = y){\n        printf("同じです\\n");\n    }\n    return 0;\n}`
+};
+
+function escapeHtml(str){
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function resetCode(){
+  document.getElementById('codeInput').value = '';
+  document.getElementById('codePreview').innerHTML = '';
+  document.getElementById('variableState').innerHTML = '';
+  document.getElementById('analysisResult').innerHTML = '';
+  document.getElementById('flowchartResult').textContent = '';
+  document.getElementById('hintResult').innerHTML = '';
+}
+
+function loadSample(type){
+  document.getElementById('codeInput').value = samples[type] || '';
+  analyzeCode();
+}
+
+function addAnalysis(list, lineNo, text){
+  list.push(`<div class="analysis-line"><strong>${lineNo}行目：</strong>${text}</div>`);
+}
+
+function addHint(list, lineNo, title, text){
+  list.push(`<div class="warning-line"><strong>${lineNo}行目：${title}</strong><br>${text}</div>`);
+}
+
+function isCommentLine(trimmed){
+  return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('*/');
+}
+
+function shouldProbablyEndWithSemicolon(trimmed){
+  if(trimmed === '') return false;
+  if(trimmed.endsWith(';')) return false;
+  if(trimmed.endsWith('{') || trimmed.endsWith('}')) return false;
+  if(/^#/.test(trimmed)) return false;
+  if(/^if\s*\(/.test(trimmed)) return false;
+  if(/^else\b/.test(trimmed)) return false;
+  if(/^for\s*\(/.test(trimmed)) return false;
+  if(/^while\s*\(/.test(trimmed)) return false;
+  if(/^switch\s*\(/.test(trimmed)) return false;
+  if(/^do\b/.test(trimmed)) return false;
+  return /(=|printf\s*\(|scanf\s*\(|return\b|int\s+|float\s+|double\s+|char\s+)/.test(trimmed);
+}
+
+function extractLoopVar(initText){
+  const normalized = initText.replace(/^int\s+/, '').trim();
+  const match = normalized.match(/^([a-zA-Z_]\w*)\s*=/);
+  return match ? match[1] : '反復';
+}
+
+function analyzeCode(){
+  const code = document.getElementById('codeInput').value.replace(/\r\n/g, '\n');
+  const lines = code.split('\n');
+  const analysis = [];
+  const flowchart = [];
+  const hints = [];
+  const highlightLines = new Set();
+  const variableState = {};
+  const variableOrder = [];
+
+  let braceBalance = 0;
+  let hasMain = false;
+  let hasFlowEnd = false;
+  const loopStack = [];
+  const blockStack = [];
+
+  function currentLoopDepth(){
+    return loopStack.length;
+  }
+
+  function pushFlow(text, depth = 0){
+    flowchart.push(`${'    '.repeat(Math.max(0, depth))}${text}`);
+  }
+
+  function pushArrow(depth = 0){
+    flowchart.push(`${'    '.repeat(Math.max(0, depth))}↓`);
+  }
+
+  pushFlow('[開始]');
+  pushArrow();
+
+  lines.forEach((rawLine, index) => {
+    const lineNo = index + 1;
+    const line = rawLine;
+    const trimmed = line.trim();
+    const currentDepth = currentLoopDepth();
+
+    for(const ch of trimmed){
+      if(ch === '{') braceBalance++;
+      if(ch === '}') braceBalance--;
+    }
+
+    if(trimmed.match(/^int\s+main\s*\(/)){
+      hasMain = true;
+      addAnalysis(analysis, lineNo, '実行開始です。');
+      return;
+    }
+
+    if(trimmed === ''){
+      addAnalysis(analysis, lineNo, '空欄です。');
+      return;
+    }
+
+    if(isCommentLine(trimmed)) return;
+
+    let checkTarget = trimmed;
+    if(trimmed.includes('printf')){
+      checkTarget = trimmed.replace(/".*?"/g, '');
+    }
+
+    if(/[Ａ-Ｚａ-ｚ０-９（）｛｝［］；，％＋－＊／＝＜＞”’　]/.test(checkTarget)){
+      addHint(
+        hints,
+        lineNo,
+        '全角文字の可能性',
+        'printfの文字列以外の部分に、全角の英数字・記号・スペースが含まれている可能性があります。半角で入力されているか確認してみましょう。'
+      );
+      highlightLines.add(lineNo);
+    }
+
+    if(/^#include\s*</.test(trimmed)){
+      addAnalysis(analysis, lineNo, '定型文（標準ライブラリ読込）。');
+      return;
+    }
+
+    const multiDeclMatch = trimmed.match(/^(int|float|double|char)\s+([a-zA-Z_]\w*(?:\s*,\s*[a-zA-Z_]\w*)+)\s*;$/);
+    if(multiDeclMatch){
+      const type = multiDeclMatch[1];
+      const names = multiDeclMatch[2].split(',').map(v => v.trim());
+      names.forEach(name => {
+        if(!(name in variableState)) variableOrder.push(name);
+        variableState[name] = '未代入';
+      });
+      addAnalysis(analysis, lineNo, `${type}型の変数 <code>${names.join('</code>, <code>')}</code> を宣言しています。`);
+      pushFlow(`[変数 ${names.join(', ')} を宣言]`, currentDepth);
+      pushArrow(currentDepth);
+      return;
+    }
+
+    const declMatch = trimmed.match(/^(int|float|double|char)\s+([a-zA-Z_]\w*)\s*(=\s*(.+))?;$/);
+    if(declMatch){
+      const type = declMatch[1];
+      const name = declMatch[2];
+      const value = declMatch[4];
+      if(!(name in variableState)) variableOrder.push(name);
+      variableState[name] = value ? value.trim() : '未代入';
+      if(value){
+        addAnalysis(analysis, lineNo, `${type}型の変数 <code>${name}</code> を宣言し、<code>${escapeHtml(value.trim())}</code> を代入しています。`);
+        pushFlow(`[変数 ${name} を宣言して ${value.trim()} を代入]`, currentDepth);
+      }else{
+        addAnalysis(analysis, lineNo, `${type}型の変数 <code>${name}</code> を宣言しています。`);
+        pushFlow(`[変数 ${name} を宣言]`, currentDepth);
+      }
+      pushArrow(currentDepth);
+      return;
+    }
+
+    const assignMatch = trimmed.match(/^([a-zA-Z_]\w*)\s*=\s*(.+);$/);
+    if(assignMatch && !/^if\s*\(/.test(trimmed) && !/^while\s*\(/.test(trimmed) && !/^for\s*\(/.test(trimmed)){
+      const name = assignMatch[1];
+      const expr = assignMatch[2].trim();
+      if(!(name in variableState)) variableOrder.push(name);
+      variableState[name] = expr;
+      addAnalysis(analysis, lineNo, `変数 <code>${name}</code> に <code>${escapeHtml(expr)}</code> を代入しています。`);
+      pushFlow(`[${name} に ${expr} を代入]`, currentDepth);
+      pushArrow(currentDepth);
+      return;
+    }
+
+    const printfMatch = trimmed.match(/^printf\s*\((.*)\)\s*;$/);
+    if(printfMatch){
+      addAnalysis(analysis, lineNo, '画面に結果を表示しようとしています。');
+      pushFlow('[画面に表示]', currentDepth);
+      pushArrow(currentDepth);
+      return;
+    }
+
+    const scanfMatch = trimmed.match(/^scanf\s*\((.*)\)\s*;$/);
+    if(scanfMatch){
+      addAnalysis(analysis, lineNo, 'キーボードから値を受け取ろうとしています。');
+      pushFlow('[キーボードから入力]', currentDepth);
+      pushArrow(currentDepth);
+      if(!/&\s*[a-zA-Z_]\w*/.test(trimmed)){
+        addHint(hints, lineNo, 'scanfの書き方を確認', '整数などを読み取るときは、変数の前に <code>&</code> が必要な場合があります。入力先の書き方を見直してみましょう。');
+        highlightLines.add(lineNo);
+      }
+      return;
+    }
+
+    const ifMatch = trimmed.match(/^if\s*\((.*)\)\s*\{?$/);
+    if(ifMatch){
+      if(currentDepth >= 2){
+        addAnalysis(analysis, lineNo, `表示を切り替える条件です。<code>${escapeHtml(ifMatch[1])}</code> で判定しています。`);
+      }else{
+        addAnalysis(analysis, lineNo, `条件分岐です。<code>${escapeHtml(ifMatch[1])}</code> で判定しています。`);
+      }
+      pushFlow(`< ${ifMatch[1].trim()} ? >`, currentDepth);
+      pushArrow(currentDepth + 1);
+      if(trimmed.includes('{')){
+        blockStack.push({ type: 'if', depth: currentDepth });
+      }
+      if(/[^=!<>]=[^=]/.test(ifMatch[1])){
+        addHint(hints, lineNo, '条件式の = に注意', '条件を比べたい場面では <code>==</code> を使うことがあります。代入の <code>=</code> になっていないか確認してみましょう。');
+        highlightLines.add(lineNo);
+      }
+      return;
+    }
+
+    if(/^else\b/.test(trimmed)){
+      addAnalysis(analysis, lineNo, 'if が成り立たなかった場合の処理です。');
+      pushFlow('[いいえの場合の処理]', currentDepth);
+      pushArrow(currentDepth + 1);
+      if(trimmed.includes('{')){
+        blockStack.push({ type: 'else', depth: currentDepth });
+      }
+      return;
+    }
+
+    const forMatch = trimmed.match(/^for\s*\((.*?);(.*?);(.*?)\)\s*\{?$/);
+    if(forMatch){
+      const init = escapeHtml(forMatch[1].trim());
+      const condition = escapeHtml(forMatch[2].trim());
+      const update = escapeHtml(forMatch[3].trim());
+      const nextLoopDepth = currentDepth + 1;
+      const role = nextLoopDepth === 1 ? '外側' : nextLoopDepth === 2 ? '内側' : 'さらに内側';
+      const loopVar = extractLoopVar(forMatch[1].trim());
+
+      if(nextLoopDepth === 1){
+        addAnalysis(analysis, lineNo, `外側のループです。<code>${init}</code> から始め、<code>${condition}</code> の間くり返します。`);
+      }else if(nextLoopDepth === 2){
+        addAnalysis(analysis, lineNo, `内側のループです。<code>${init}</code> から始め、<code>${condition}</code> の間くり返します。`);
+      }else{
+        addAnalysis(analysis, lineNo, `さらに内側のループです。`);
+      }
+
+      pushFlow(`[${role}のループ開始: ${forMatch[1].trim()} ; ${forMatch[2].trim()} ; ${forMatch[3].trim()}]`, currentDepth);
+      pushArrow(nextLoopDepth);
+      loopStack.push({ depth: nextLoopDepth, lineNo, role, loopVar });
+      return;
+    }
+
+    const whileMatch = trimmed.match(/^while\s*\((.*)\)\s*\{?$/);
+    if(whileMatch){
+      addAnalysis(analysis, lineNo, `whileループです。<code>${escapeHtml(whileMatch[1])}</code> の間くり返します。`);
+      pushFlow(`[while ループ開始: ${whileMatch[1].trim()}]`, currentDepth);
+      pushArrow(currentDepth + 1);
+      blockStack.push({ type: 'while', depth: currentDepth });
+      return;
+    }
+
+    const returnMatch = trimmed.match(/^return\s+(.+)\s*;$/);
+    if(returnMatch){
+      addAnalysis(analysis, lineNo, `<code>${escapeHtml(returnMatch[1].trim())}</code> を返して処理を終えようとしています。`);
+      pushFlow('[終了]');
+      hasFlowEnd = true;
+      return;
+    }
+
+    if(trimmed === '{'){
+      addAnalysis(analysis, lineNo, '処理のまとまり開始です。');
+      return;
+    }
+
+    if(trimmed === '}'){
+      let message = '処理のまとまり終了です。';
+      const topLoop = loopStack[loopStack.length - 1];
+      const topBlock = blockStack[blockStack.length - 1];
+
+      if(topLoop && topLoop.depth === currentDepth){
+        if(topLoop.depth === 2){
+          message = '内側のまとまり終了です。';
+        }else if(topLoop.depth === 1){
+          message = '外側のまとまり終了です。';
+        }else{
+          message = 'さらに内側のまとまり終了です。';
+        }
+        pushFlow(`[${topLoop.role}のループ終了 → 次の ${topLoop.loopVar} へ]`, Math.max(0, topLoop.depth - 1));
+        pushArrow(Math.max(0, topLoop.depth - 1));
+        loopStack.pop();
+      }else if(topBlock){
+        if(topBlock.type === 'if'){
+          message = 'if のまとまり終了です。';
+        }else if(topBlock.type === 'else'){
+          message = 'else のまとまり終了です。';
+        }else if(topBlock.type === 'while'){
+          message = 'while のまとまり終了です。';
+        }
+        blockStack.pop();
+      }
+
+      addAnalysis(analysis, lineNo, message);
+      return;
+    }
+
+    if(shouldProbablyEndWithSemicolon(trimmed)){
+      addHint(hints, lineNo, 'セミコロンの不足かも', '文末に <code>;</code> が必要な可能性があります。直前の行も含めて見直してみましょう。');
+      highlightLines.add(lineNo);
+    }
+
+    addAnalysis(analysis, lineNo, '説明未対応コードか、エラーがあります。');
+  });
+
+  if(!hasMain){
+    hints.unshift(`<div class="warning-line"><strong>main関数が見当たりません</strong><br>学習用の基本的なCプログラムでは、<code>int main(void)</code> などの開始地点を書くことが多いです。</div>`);
+  }
+
+  if(braceBalance !== 0){
+    hints.push(`<div class="warning-line"><strong>波かっこの数を確認</strong><br><code>{</code> と <code>}</code> の数が対応していない可能性があります。処理のまとまりの始まりと終わりを追ってみましょう。</div>`);
+  }
+
+  if(!hasFlowEnd){
+    pushFlow('[終了]');
+  }
+
+  const previewHtml = lines.map((line, index) => {
+    const lineNo = index + 1;
+    const highlighted = highlightLines.has(lineNo) ? ' highlight-line' : '';
+    const safeText = escapeHtml(line) || '&nbsp;';
+    return `
+      <div class="code-line${highlighted}">
+        <div class="code-line-number">${lineNo}</div>
+        <div class="code-line-text">${safeText}</div>
+      </div>
+    `;
+  }).join('');
+
+  const variableHtml = variableOrder.length
+    ? variableOrder.map(name => `<div class="variable-chip">${escapeHtml(name)} = ${escapeHtml(String(variableState[name]))}</div>`).join('')
+    : `<div class="note">変数の状態はまだ見つかっていません。</div>`;
+
+  document.getElementById('codePreview').innerHTML = previewHtml;
+  document.getElementById('variableState').innerHTML = variableHtml;
+  document.getElementById('analysisResult').innerHTML = analysis.length
+    ? analysis.join('')
+    : `<div class="note">解析結果はまだありません。コードを入力して「解析する」を押してください。</div>`;
+  document.getElementById('flowchartResult').textContent = flowchart.length
+    ? flowchart.join('\n')
+    : '疑似フローチャートはまだありません。';
+  document.getElementById('hintResult').innerHTML = hints.length
+    ? hints.join('') + `<div class="hint"><b>見方のコツ</b><br>ヒントは答えそのものではなく、<span class="highlight">どこを疑うべきか</span> を示しています。まずは強調された行と、その一つ前の行も一緒に確認してみましょう。</div>`
+    : `<div class="hint"><b>大きなミスは見つかっていません。</b><br>次は、変数の値がどう変わるか、条件式がどんな場合に真になるかを自分の言葉で説明できるか試してみましょう。</div>`;
+}
+
+analyzeCode();
+</script>
+</body>
+</html>
