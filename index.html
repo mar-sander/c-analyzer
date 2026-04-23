@@ -4,10 +4,15 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C言語コード読解支援ツール</title>
+<title>[C] CODE ANALYZER</title>
+<link rel="icon" href="https://raw.githubusercontent.com/mar-sander/assets/refs/heads/main/favicon.ico">
+
 <style>
+
+
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
+
 body{
   font-family:sans-serif;
   background:#111;
@@ -328,6 +333,45 @@ button:hover{
   .code-line-number{flex:0 0 24px;}
   .line-analysis{padding:10px 12px 12px 42px;}
 }
+
+
+hr {
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #bdbdbd7d;
+}
+
+.footer {
+  font-family: sans-serif;
+  padding-top: 50px;
+  font-size: 14px;
+  color: #999;
+  background: #;
+}
+
+.footer__navi {
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+
+.footer__navi li {
+  display: inline-block;
+}
+
+.footer__navi li:not(:last-child) {
+  margin-right: 16px;
+}
+
+.footer__logo {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.copyright {
+	font-size: 12px;
+	}
+
+
 </style>
 </head>
 <body>
@@ -756,5 +800,21 @@ function analyzeCode(){
 
 analyzeCode();
 </script>
+
+<footer class="footer">
+
+    <a href="#" class="footer__logo">
+      <img src="https://raw.githubusercontent.com/mar-sander/assets/refs/heads/main/Mlogo3-wh800.png" width="64" alt="MM Logo" />
+    </a>
+    <ul class="footer__navi flex">
+		<li><a href="https://sites.google.com/g.nagano-c.ed.jp/24c" target="_blank">HOME</a></li>
+		<li><a href="https://mar-sander.github.io/count-tool/">文字数</a></li>
+		<li><a href="https://mar-sander.github.io/day-counter/">〆切±</a></li>
+    </ul>
+  </div>  <hr />
+  <p class="copyright">
+    Copyright © M.M. All Rights Reserved.</p>
+</footer>
+
 </body>
 </html>
