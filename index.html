@@ -52,6 +52,18 @@ body{
   font-size:0.8rem;
 }
 
+
+.page-title::before {
+	content: "";
+	width: 150%;	/* 線の長さ */
+	height: 2px;	/* 線の太さ */
+	bottom: -8px;	/* 線の縦の開始位置 */
+	left: 50%;
+	transform: translateX(-50%);
+	position: absolute;
+	background: #000;
+}
+
 .tool-grid{
   display:grid;
   grid-template-columns:1fr;
